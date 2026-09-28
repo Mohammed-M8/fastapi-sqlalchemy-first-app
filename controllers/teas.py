@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from data import tea_data
+from dependencies.get_current_user import get_current_user
 from models import tea
 from models.tea import TeaModel
+from models.user import UserModel
 from serializers.tea import CreateTeaSchema, TeaSchema, UpdateTeaSchema
 from typing import List
 from database import get_db
@@ -24,8 +26,8 @@ def get_single_tea(tea_id: int,db:Session=Depends(get_db)):
 
 
 @router.post("/teas",response_model=TeaSchema,status_code=201)
-def create_tea(tea: CreateTeaSchema,db:Session=Depends(get_db)):
-    new_data=TeaModel(**tea.model_dump())
+def create_tea(tea: CreateTeaSchema,db:Session=Depends(get_db),current_user:UserModel=Depends(get_current_user)):
+    new_data=TeaModel(**tea.model_dump(),user_id=current_user.id)
     db.add(new_data)
     db.commit()
     db.refresh(new_data)
@@ -33,11 +35,14 @@ def create_tea(tea: CreateTeaSchema,db:Session=Depends(get_db)):
 
 
 @router.put("/teas/{tea_id}")
-def update_tea(tea_id: int, tea: UpdateTeaSchema,db:Session=Depends(get_db)):
+def update_tea(tea_id: int, tea: UpdateTeaSchema,db:Session=Depends(get_db),current_user:UserModel=Depends(get_current_user)):
     oldTea=db.query(TeaModel).filter(TeaModel.id==tea_id).first()
     if not oldTea:
         raise HTTPException(404,"Tea not found")
 
+    if oldTea.user_id != current_user.id:#type:ignore
+        raise HTTPException(status_code=403, detail="Operation forbidden")
+        
     tea_data=tea.model_dump(exclude_unset=True)
     for key,value in tea_data.items():
         setattr(oldTea,key,value)
@@ -50,7 +55,7 @@ def update_tea(tea_id: int, tea: UpdateTeaSchema,db:Session=Depends(get_db)):
 
 
 @router.delete("/teas/{tea_id}",status_code=204)
-def delete_tea(tea_id: int,db:Session=Depends(get_db)):
+def delete_tea(tea_id: int,db:Session=Depends(get_db),current_user:UserModel=Depends(get_current_user)):
     tea_to_delete=db.query(TeaModel).filter(TeaModel.id==tea_id).first()
     if not tea_to_delete:
             raise HTTPException(status_code=404, detail="Tea not found")
