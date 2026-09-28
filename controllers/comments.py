@@ -24,7 +24,7 @@ def get_single_comment(comment_id:int,db:Session=Depends(get_db)):
 
 @router.post('/teas/{tea_id}/comments',response_model=CommentSchema,status_code=201)
 def create_comment(tea_id:int,new_comment:CreateCommentSchema,db:Session=Depends(get_db),current_user:UserModel=Depends(get_current_user)):
-    new_data=CommentModel(**new_comment.model_dump(),tea_id=tea_id)
+    new_data=CommentModel(**new_comment.model_dump(),tea_id=tea_id,user_id=current_user.id)
     db.add(new_data)
     db.commit()
     db.refresh(new_data)
@@ -53,7 +53,7 @@ def delete_comment(comment_id:int,db:Session=Depends(get_db),current_user:UserMo
     if not comment_to_delete:
         raise HTTPException(404,"comment not found")
 
-    if old_comment.user_id!=current_user.id:#type:ignore
+    if comment_to_delete.user_id!=current_user.id:#type:ignore
         raise HTTPException(403,"Forbidden")
     
     db.delete(comment_to_delete)
