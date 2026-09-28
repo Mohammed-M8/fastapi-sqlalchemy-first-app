@@ -1,9 +1,12 @@
 
+from datetime import datetime, timedelta, timezone
 from warnings import deprecated
 
+import jwt
 from sqlalchemy import Column, Integer, String
 from .base import BaseModel
 from passlib.context import CryptContext
+from config.environment import secret
 
 pwd_context=CryptContext(["bcrypt"],deprecated="auto")
 
@@ -18,3 +21,17 @@ class UserModel(BaseModel):
 
     def set_password(self,password:str):
         self.password=pwd_context.hash(password)
+
+    def verify_password(self,password:str)->bool:
+        return pwd_context.verify(password,self.password)
+
+    def generate_token(self,**kwargs):
+        payload={
+            "exp":datetime.now(timezone.utc)+timedelta(days=1),
+            "iat":datetime.now(timezone.utc),
+            "sub":self.id,
+        }
+
+        token=jwt.encode(payload,secret,algorithm="HS256")
+
+        return token

@@ -1,6 +1,9 @@
-# seed.py
-from sqlalchemy.orm import Session, sessionmaker
+from dotenv import load_dotenv
+load_dotenv()
+
+from sqlalchemy.orm import sessionmaker
 from data.tea_data import teas_list, comments_list
+from data.user_data import user_list
 from config.environment import DATABASE_URL
 from sqlalchemy import create_engine
 from models.base import Base # import base model
@@ -16,6 +19,9 @@ try:
 
     print("Seeding the database...")
     db = SessionLocal()
+
+    db.add_all(user_list)
+    db.commit()
 
     # Seed teas first, as comments depend on them
     db.add_all(teas_list)
