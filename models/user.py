@@ -21,6 +21,7 @@ class UserModel(BaseModel):
     password=Column(String,nullable=True)
 
     teas=relationship('TeaModel',back_populates='user')
+    comments=relationship('CommentModel',back_populates='user')
 
     def set_password(self,password:str):
         self.password=pwd_context.hash(password)

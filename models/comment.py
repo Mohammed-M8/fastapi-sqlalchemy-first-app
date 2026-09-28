@@ -11,4 +11,6 @@ class CommentModel(BaseModel):
     id=Column(Integer,primary_key=True,index=True)
     content=Column(String,nullable=False)
     tea_id=Column(Integer,ForeignKey('teas.id'))
+    user_id=Column(Integer,ForeignKey('users.id'))
     tea=relationship('TeaModel',back_populates="comments")
+    user=relationship('UserModel',back_populates="comments")
