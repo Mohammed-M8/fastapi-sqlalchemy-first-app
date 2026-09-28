@@ -1,11 +1,11 @@
 # seed.py
 from sqlalchemy.orm import Session, sessionmaker
 from data.tea_data import teas_list, comments_list
-from config.environment import db_URI
+from config.environment import DATABASE_URL
 from sqlalchemy import create_engine
 from models.base import Base # import base model
 
-engine = create_engine(db_URI)
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 try:
